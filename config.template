@@ -1,0 +1,4 @@
+[GENERAL]
+
+LOGLEVEL = INFO
+BACKUP_PATH = /mnt/backup
