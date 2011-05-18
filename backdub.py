@@ -11,8 +11,8 @@ CONFIG_FILE = "./config"
 LOGLEVELS = {"DEBUG" : 0, "INFO" : 1, "NOTICE" : 2, "WARN" : 3, "ERROR" : 4}
 
 # These can be set in the config file
-BACKUP_PATH = None
-LOGLEVEL = "DEBUG"
+BACKUP_PATH = os.getcwd()
+LOGLEVEL = "NOTICE"
 
 class Target:
   def __init__(self, path):
@@ -74,7 +74,7 @@ class Target:
              + self.name + "'?")
       # Zip the archive
       os.system("gzip " + tarfile)
-      plog("INFO", "Backup finished on target '" + self.name + "'")
+      plog("INFO", "Backup finished on target '" + self.name + ".'")
       # DEBUG: Print out the return value of the last command
       os.system("echo '[Return value: '$?']'")
 
@@ -86,31 +86,35 @@ def plog(level, msg):
     sys.stdout.flush()
 
 def configure(config_file):
-  """ Read configuration from a given file """
+  """ Read configuration from a file """
   config = ConfigParser.SafeConfigParser()
   if os.path.exists(config_file):
-    plog("DEBUG", "Loading configuration from file '" + config_file + "'")
     config.read(config_file)
   else:
-    plog("ERROR", "Configuration file '" + config_file
-       + "' does not exist, exiting.")
-    sys.exit(0)
-  # Set the backup path
-  global BACKUP_PATH
-  BACKUP_PATH = config.get("GENERAL", "BACKUP_PATH")
-  plog("DEBUG", "BACKUP_PATH is "+BACKUP_PATH)
-  # Set the log level
-  global LOGLEVEL
-  LOGLEVEL = config.get("GENERAL", "LOGLEVEL")
+    plog("NOTICE", "Config file '" + config_file
+       + "' does not exist, running on default values.")
+    return
+  try:
+    global LOGLEVEL
+    LOGLEVEL = config.get("GENERAL", "LOGLEVEL")
+  except Exception as e:
+    plog("NOTICE", str(e) + " -> using default value: " + LOGLEVEL)
+  try:
+    global BACKUP_PATH
+    BACKUP_PATH = config.get("GENERAL", "BACKUP_PATH")
+  except Exception as e:
+    plog("NOTICE", str(e) + " -> using cwd: " + BACKUP_PATH)
+  finally:
+    plog("DEBUG", "BACKUP_PATH is " + BACKUP_PATH)
 
 if __name__ == '__main__':
   """ Program entry point """
-  plog("INFO", "backdub v" + str(VERSION))
   if len(sys.argv) != 2:
-    plog("NOTICE", "Usage is \"./backdub.py <targetfile>\"")
+    plog("ERROR", "Usage is \"./backdub.py <targetfile>\"")
   else:
     configure(CONFIG_FILE)
-    # Instanciate the given target and back it up
+    plog("INFO", "backdub v" + str(VERSION))
+    # Create target and back it up
     target = Target(sys.argv[1])
     target.backup()
 
