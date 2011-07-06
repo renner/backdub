@@ -1,0 +1,3 @@
+- Rename 'config.template' to 'config' and set BACKUP_PATH to a valid path
+- Create a targetfile and start the backup using './backup.py <targetfile>'
+- Use 'target.example' as a template for targets
