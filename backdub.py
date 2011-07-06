@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# Copyright (c) Johannes Renner 2011, see LICENSE file.
 
 import os
 import sys
@@ -10,7 +11,7 @@ VERSION = "0.02a"
 CONFIG_FILE = "./config"
 LOGLEVELS = {"DEBUG" : 0, "INFO" : 1, "NOTICE" : 2, "WARN" : 3, "ERROR" : 4}
 
-# These can be set in the config file
+# Override these in the config file
 BACKUP_PATH = os.getcwd()
 LOGLEVEL = "NOTICE"
 
