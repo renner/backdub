@@ -53,7 +53,7 @@ class Target:
       tarfile = BACKUP_PATH + "/" + self.name + "." + today + ".tar"
       for p in self.paths:
         if os.path.exists(p):
-          plog("INFO", "Path exists: " + p)
+          plog("DEBUG", "Path exists: " + p)
           plog("DEBUG", "split 0: " + os.path.split(p)[0] + ", split 1: "
              + os.path.split(p)[1])
           # Change to parent directory in any case
