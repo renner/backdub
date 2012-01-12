@@ -10,6 +10,7 @@ VERSION = "0.02a"
 
 CONFIG_FILE = "./config"
 LOGLEVELS = {"DEBUG" : 0, "INFO" : 1, "NOTICE" : 2, "WARN" : 3, "ERROR" : 4}
+VERBOSE = False
 
 # Override these in the config file
 BACKUP_PATH = os.getcwd()
@@ -59,13 +60,19 @@ class Target:
           # Change to parent directory in any case
           # FIXME: This will not work for target paths on the root level
           command = "cd " + os.path.split(p)[0] + ";"
+          # Handle 'verbose'
+          options = "-"
+          if VERBOSE:
+            options += "v"
           # Create archive or append
           if not os.path.exists(tarfile):
-            command += "tar -cvf " + tarfile + " " + os.path.split(p)[1]
+            options += "cf"
+            command += "tar " + options + " " + tarfile + " " + os.path.split(p)[1]
             plog("DEBUG", "Command: << " + command + " >>")
             plog("INFO", "Creating archive of " + p + " to " + tarfile)
           else:
-            command += "tar -rvf " + tarfile + " " + os.path.split(p)[1]
+            options += "rf"
+            command += "tar " + options + " " + tarfile + " " + os.path.split(p)[1]
             plog("DEBUG", "Command: << " + command + " >>")
             plog("INFO", "Appending " + p + " to " + tarfile)
           os.system(command)
@@ -110,12 +117,24 @@ def configure(config_file):
 
 if __name__ == '__main__':
   """ Program entry point """
-  if len(sys.argv) != 2:
-    plog("ERROR", "Usage is \"./backdub.py <targetfile>\"")
+  if len(sys.argv) < 2:
+    plog("ERROR", "Usage is \"./backdub.py <targetfile> <options>\"")
   else:
     configure(CONFIG_FILE)
     plog("INFO", "backdub v" + str(VERSION))
     # Create target and back it up
     target = Target(sys.argv[1])
+
+    # Handle options
+    if len(sys.argv) > 2:
+      # Init options
+      options = sys.argv[2]
+      if options and options == "-v":
+        VERBOSE = True
+      elif options:
+        plog("ERROR", "Unsupported option: " + options)
+        sys.exit()
+
+    # Start the backup
     target.backup()
 
