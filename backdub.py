@@ -47,11 +47,18 @@ class Target:
     return paths
 
   def backup(self):
-    """ Create a zipped tape archive """
+    """ Create a zipped tape archive of the contents """
     if len(self.paths) >= 1:
       # We have at least one path, generate the archive filename
-      today = str(datetime.date.today())
-      tarfile = BACKUP_PATH + "/" + self.name + "." + today + ".tar"
+      timestamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+      tarfile = BACKUP_PATH + "/" + self.name + "." + timestamp + ".tar"
+      zipfile = tarfile + ".gz"
+      # Check if these files exist
+      if os.path.exists(tarfile):
+        os.remove(tarfile)
+      if os.path.exists(zipfile):
+        os.rename(zipfile, zipfile + ".OLD")
+      # Iterate over target contents
       for p in self.paths:
         if os.path.exists(p):
           plog("DEBUG", "Path exists: " + p)
@@ -64,7 +71,7 @@ class Target:
           options = "-"
           if VERBOSE:
             options += "v"
-          # Create archive or append
+          # Create the archive or append to it
           if not os.path.exists(tarfile):
             options += "cf"
             command += "tar " + options + " " + tarfile + " " + os.path.split(p)[1]
