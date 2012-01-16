@@ -9,12 +9,12 @@ import ConfigParser
 VERSION = "0.02a"
 
 CONFIG_FILE = "./config"
-LOGLEVELS = {"DEBUG" : 0, "INFO" : 1, "NOTICE" : 2, "WARN" : 3, "ERROR" : 4}
+LOGLEVELS = {"TRACE" : 0, "DEBUG" : 1, "INFO" : 2, "NOTICE" : 3, "WARN" : 4, "ERROR" : 5}
 VERBOSE = False
 
 # Override these in the config file
 BACKUP_PATH = os.getcwd()
-LOGLEVEL = "NOTICE"
+LOGLEVEL = "INFO"
 
 class Target:
   def __init__(self, path):
@@ -43,14 +43,14 @@ class Target:
       if len(splitted) > 0:
         p = splitted[0]
         paths.append(p)
-        plog("DEBUG", "Added path: "+p)
+        plog("DEBUG", "Added path: " + p)
     return paths
 
   def backup(self):
     """ Create a zipped tape archive of the contents """
     if len(self.paths) >= 1:
       # We have at least one path, generate the archive filename
-      timestamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+      timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
       tarfile = BACKUP_PATH + "/" + self.name + "." + timestamp + ".tar"
       zipfile = tarfile + ".gz"
       # Check if these files exist
@@ -89,15 +89,23 @@ class Target:
              + self.name + "'?")
       # Zip the archive
       os.system("gzip " + tarfile)
-      plog("INFO", "Backup finished on target '" + self.name + ".'")
-      # DEBUG: Print out the return value of the last command
-      os.system("echo '[Return value: '$?']'")
+      plog("NOTICE", "Backup finished on target '" + self.name + "'")
+      # Print the return value of the last command
+      if (LOGLEVELS["DEBUG"] >= LOGLEVELS[LOGLEVEL]):
+        os.system("echo '[Return value: '$?']'")
 
-def plog(level, msg):
-  """ Log messages to stdout """
-  # TODO: Add timestamps
-  if(LOGLEVELS[level] >= LOGLEVELS[LOGLEVEL]):
-    print level + ": " + msg
+def we_need_to_log(level):
+  """ Check if we need to log """
+  return LOGLEVELS[level] >= LOGLEVELS[LOGLEVEL]
+
+def plog(level, msg, ex=None):
+  """ Log a message to stdout """
+  if we_need_to_log(level):
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+    msg = timestamp + " [" + level + "]: " + msg
+    if ex:
+      msg += " (" + str(ex) + ")"
+    print msg
     sys.stdout.flush()
 
 def configure(config_file):
@@ -113,35 +121,36 @@ def configure(config_file):
     global LOGLEVEL
     LOGLEVEL = config.get("GENERAL", "LOGLEVEL")
   except Exception as e:
-    plog("NOTICE", str(e) + " -> using default value: " + LOGLEVEL)
+    plog("NOTICE", "Setting default LOGLEVEL: " + LOGLEVEL, e)
   try:
     global BACKUP_PATH
     BACKUP_PATH = config.get("GENERAL", "BACKUP_PATH")
   except Exception as e:
-    plog("NOTICE", str(e) + " -> using cwd: " + BACKUP_PATH)
+    plog("NOTICE", "Writing backups to CWD: " + BACKUP_PATH, e)
   finally:
     plog("DEBUG", "BACKUP_PATH is " + BACKUP_PATH)
 
 if __name__ == '__main__':
   """ Program entry point """
   if len(sys.argv) < 2:
-    plog("ERROR", "Usage is \"./backdub.py <targetfile> <options>\"")
+    plog("ERROR", "Usage is \"./backdub.py <targetfile>\"")
   else:
     configure(CONFIG_FILE)
     plog("INFO", "backdub v" + str(VERSION))
-    # Create target and back it up
-    target = Target(sys.argv[1])
 
-    # Handle options
+    # Set verbosity for tar
+    if we_need_to_log("TRACE"):
+      VERBOSE = True
+
+    # Handle commandline options
     if len(sys.argv) > 2:
       # Init options
       options = sys.argv[2]
-      if options and options == "-v":
-        VERBOSE = True
-      elif options:
-        plog("ERROR", "Unsupported option: " + options)
+      if options:
+        plog("ERROR", "Unsupported options: " + sys.argv[2])
         sys.exit()
 
-    # Start the backup
+    # Create target and back it up
+    target = Target(sys.argv[1])
     target.backup()
 
