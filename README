@@ -1,3 +1,7 @@
-- Rename 'config.template' to 'config' and set BACKUP_PATH to a valid path
-- Create a targetfile and start the backup using './backup.py <targetfile>'
-- Use 'target.example' as a template for targets
+Backdub is a generic backup solution that can be used for archiving any kind of data.
+
+Getting Started:
+
+- Create a configuration file (see 'config.template')
+- Compile a targetfile containing filesystem paths (see 'target.example')
+- Perform a backup of those files using './backup.py <targetfile>'
