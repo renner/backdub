@@ -130,6 +130,20 @@ def configure(config_file):
   finally:
     plog("DEBUG", "BACKUP_PATH is " + BACKUP_PATH)
 
+def backup(target, prefix=""):
+    """ Recursively call backup on target files or dirs """
+    if not prefix == "":
+      target = prefix + "/" + target
+    if os.path.isdir(target):
+      plog("DEBUG", "Directory: " + target)
+      listing = os.listdir(target)
+      for item in listing:
+        backup(item, target)
+    else:
+      plog("DEBUG", "Targetfile: " + target)
+      target = Target(target)
+      target.backup()
+
 if __name__ == '__main__':
   """ Program entry point """
   if len(sys.argv) < 2:
@@ -150,7 +164,6 @@ if __name__ == '__main__':
         plog("ERROR", "Unsupported options: " + sys.argv[2])
         sys.exit()
 
-    # Create target and back it up
-    target = Target(sys.argv[1])
-    target.backup()
+    # Get started on given target
+    backup(sys.argv[1])
 
