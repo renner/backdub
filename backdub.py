@@ -6,7 +6,7 @@ import sys
 import datetime
 import ConfigParser
 
-VERSION = "0.02a"
+VERSION = "0.0.3a"
 
 CONFIG_FILE = "./config"
 LOGLEVELS = {"TRACE" : 0, "DEBUG" : 1, "INFO" : 2, "NOTICE" : 3, "WARN" : 4, "ERROR" : 5}
@@ -98,7 +98,7 @@ class Target:
 def we_need_to_log(level):
   """ Check if we need to log """
   return LOGLEVELS[level] >= LOGLEVELS[LOGLEVEL]
-        
+
 def get_timestamp(pattern="%Y-%m-%d-%H%M%S"):
   """ Get a timestamp using the given pattern """
   return datetime.datetime.now().strftime(pattern)
@@ -127,6 +127,8 @@ def configure(config_file):
     LOGLEVEL = config.get("GENERAL", "LOGLEVEL")
   except Exception as e:
     plog("NOTICE", "Setting default LOGLEVEL: " + LOGLEVEL, e)
+  # Print a welcome message
+  plog("INFO", "backdub-" + str(VERSION))
   try:
     global BACKUP_PATH
     BACKUP_PATH = config.get("GENERAL", "BACKUP_PATH")
@@ -134,6 +136,9 @@ def configure(config_file):
     plog("NOTICE", "Writing backups to CWD: " + BACKUP_PATH, e)
   finally:
     plog("DEBUG", "BACKUP_PATH is " + BACKUP_PATH)
+  # Set verbosity for tar
+  if we_need_to_log("TRACE"):
+    VERBOSE = True
 
 def backup(target, prefix="", timestamp=None):
     """ Recursively call backup on target files or dirs """
@@ -155,11 +160,6 @@ if __name__ == '__main__':
     plog("ERROR", "Usage is \"./backdub.py <targetfile>\"")
   else:
     configure(CONFIG_FILE)
-    plog("INFO", "backdub v" + str(VERSION))
-
-    # Set verbosity for tar
-    if we_need_to_log("TRACE"):
-      VERBOSE = True
 
     # Handle commandline options
     if len(sys.argv) > 2:
