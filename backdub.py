@@ -46,11 +46,12 @@ class Target:
         plog("DEBUG", "Added path: " + p)
     return paths
 
-  def backup(self):
+  def backup(self, timestamp=None):
     """ Create a zipped tape archive of the contents """
     if len(self.paths) >= 1:
       # We have at least one path, generate the archive filename
-      timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
+      if not timestamp:
+        timestamp = get_timestamp()
       tarfile = BACKUP_PATH + "/" + self.name + "." + timestamp + ".tar"
       zipfile = tarfile + ".gz"
       # Check if these files exist
@@ -97,11 +98,15 @@ class Target:
 def we_need_to_log(level):
   """ Check if we need to log """
   return LOGLEVELS[level] >= LOGLEVELS[LOGLEVEL]
+        
+def get_timestamp(pattern="%Y-%m-%d-%H%M%S"):
+  """ Get a timestamp using the given pattern """
+  return datetime.datetime.now().strftime(pattern)
 
 def plog(level, msg, ex=None):
   """ Log a message to stdout """
   if we_need_to_log(level):
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+    timestamp = get_timestamp("%Y-%m-%d-%H:%M:%S")
     msg = timestamp + " [" + level + "]: " + msg
     if ex:
       msg += " (" + str(ex) + ")"
@@ -130,7 +135,7 @@ def configure(config_file):
   finally:
     plog("DEBUG", "BACKUP_PATH is " + BACKUP_PATH)
 
-def backup(target, prefix=""):
+def backup(target, prefix="", timestamp=None):
     """ Recursively call backup on target files or dirs """
     if not prefix == "":
       target = prefix + "/" + target
@@ -138,11 +143,11 @@ def backup(target, prefix=""):
       plog("DEBUG", "Directory: " + target)
       listing = os.listdir(target)
       for item in listing:
-        backup(item, target)
+        backup(item, target, timestamp)
     else:
       plog("DEBUG", "Targetfile: " + target)
       target = Target(target)
-      target.backup()
+      target.backup(timestamp)
 
 if __name__ == '__main__':
   """ Program entry point """
@@ -165,5 +170,5 @@ if __name__ == '__main__':
         sys.exit()
 
     # Get started on given target
-    backup(sys.argv[1])
+    backup(sys.argv[1], timestamp=get_timestamp())
 
