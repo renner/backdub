@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (c) Johannes Renner 2011, see LICENSE file.
+# Copyright (c) 2011--2012 Johannes Renner, see LICENSE.
 
 import os
 import sys
