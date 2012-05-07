@@ -38,12 +38,10 @@ class Target:
     # Clear paths
     paths = []
     for l in lines:
-      # Split to single values
-      splitted = l.split()
-      if len(splitted) > 0:
-        p = splitted[0]
-        paths.append(p)
-        plog("DEBUG", "Added path: " + p)
+      # Strip leading and trailing spaces
+      l = l.strip()
+      paths.append(l)
+      plog("DEBUG", "Added path: " + l)
     return paths
 
   def backup(self, timestamp=None):
@@ -63,11 +61,14 @@ class Target:
       for p in self.paths:
         if os.path.exists(p):
           plog("DEBUG", "Path exists: " + p)
-          plog("DEBUG", "split 0: " + os.path.split(p)[0] + ", split 1: "
-             + os.path.split(p)[1])
-          # Change to parent directory in any case
-          # FIXME: This will not work for target paths on the root level
-          command = "cd " + os.path.split(p)[0] + ";"
+          # Split up the path
+          parent_folder = os.path.split(p)[0].replace(" ", "\ ")
+          filename = os.path.split(p)[1]
+          plog("DEBUG", "Folder: " + parent_folder)
+          plog("DEBUG", "Filename: " + filename)
+          # FIXME: Will not work for target files on root level
+          # Change to parent directory
+          command = "cd " + parent_folder + ";"
           # Handle 'verbose'
           options = "-"
           if VERBOSE:
@@ -75,12 +76,12 @@ class Target:
           # Create the archive or append to it
           if not os.path.exists(tarfile):
             options += "cf"
-            command += "tar " + options + " " + tarfile + " " + os.path.split(p)[1]
+            command += "tar " + options + " " + tarfile + " " + filename
             plog("DEBUG", "Command: << " + command + " >>")
             plog("INFO", "Creating archive of " + p + " to " + tarfile)
           else:
             options += "rf"
-            command += "tar " + options + " " + tarfile + " " + os.path.split(p)[1]
+            command += "tar " + options + " " + tarfile + " " + filename
             plog("DEBUG", "Command: << " + command + " >>")
             plog("INFO", "Appending " + p + " to " + tarfile)
           os.system(command)
@@ -89,7 +90,10 @@ class Target:
           plog("WARN","Path doesn't exist! Remove '" + p + "' from target '"
              + self.name + "'?")
       # Zip the archive
-      os.system("gzip " + tarfile)
+      if os.path.exists(tarfile):
+        os.system("gzip " + tarfile)
+      else:
+        plog("WARN", "Archive not found: " + tarfile)
       plog("NOTICE", "Backup finished on target '" + self.name + "'")
       # Print the return value of the last command
       if (LOGLEVELS["DEBUG"] >= LOGLEVELS[LOGLEVEL]):
