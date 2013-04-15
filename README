@@ -1,7 +1,7 @@
-Backdub is a generic backup solution that can be used for archiving any kind of data.
+Backdub is a generic backup solution that can be used for archiving any kind of files and directories.
 
-Getting Started:
+This is how to get started:
 
 - Create a configuration file (see 'config.template')
-- Compile a targetfile containing filesystem paths (see 'target.example')
-- Perform a backup of those files using './backup.py <targetfile>'
+- Create a target file containing filesystem paths (see 'target.example')
+- Perform a backup of a target file by calling './backdub.py <targetfile>'
